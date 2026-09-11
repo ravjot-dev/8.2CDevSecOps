@@ -5,34 +5,70 @@ pipeline {
 
         stage('Checkout') {
             steps {
-                git branch: 'main',
-                    url: 'https://github.com/ravjot-dev/8.2CDevSecOps.git'
+                checkout scm
             }
         }
 
         stage('Install Dependencies') {
             steps {
-                sh 'npm install'
+                sh '''
+                    export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
+
+                    echo "Checking Node.js installation..."
+                    node --version
+                    npm --version
+
+                    echo "Installing dependencies..."
+                    npm install
+                '''
             }
         }
 
         stage('Run Tests') {
             steps {
-                sh 'npm test || true'
+                sh '''
+                    export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
+
+                    echo "Running tests..."
+                    npm test
+                '''
             }
         }
 
         stage('Generate Coverage Report') {
             steps {
-                sh 'npm run coverage || true'
+                sh '''
+                    export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
+
+                    echo "Generating coverage report..."
+                    npm test -- --coverage
+                '''
             }
         }
 
         stage('NPM Audit (Security Scan)') {
             steps {
-                sh 'npm audit || true'
+                sh '''
+                    export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
+
+                    echo "Running npm security audit..."
+                    npm audit --audit-level=high
+                '''
             }
         }
+    }
 
+    post {
+        always {
+            echo 'Pipeline completed.'
+        }
+
+        success {
+            echo 'Pipeline completed successfully!'
+        }
+
+        failure {
+            echo 'Pipeline failed. Check the Console Output for details.'
+        }
     }
 }
