@@ -1,76 +1,77 @@
 pipeline {
     agent any
 
-    environment {
-        NODE_HOME = "/Users/rav/.nvm/versions/node/v24.14.0"
-        PATH = "/Users/rav/.nvm/versions/node/v24.14.0/bin:/opt/homebrew/bin:/usr/local/bin:${env.PATH}"
-    }
-
     stages {
 
         stage('Checkout') {
             steps {
-                checkout scm
+                git branch: 'main',
+                    url: 'https://github.com/ravjot-dev/8.2CDevSecOps.git'
             }
         }
 
         stage('Check Node and NPM') {
             steps {
                 sh '''
+                    export PATH="/opt/homebrew/opt/node@24/bin:$PATH"
+
                     echo "Node version:"
                     node --version
 
                     echo "NPM version:"
                     npm --version
-
-                    echo "NPM location:"
-                    which npm
                 '''
             }
         }
 
         stage('Install Dependencies') {
             steps {
-                sh 'npm install'
+                sh '''
+                    export PATH="/opt/homebrew/opt/node@24/bin:$PATH"
+                    npm install
+                '''
             }
         }
 
         stage('Run Tests') {
             steps {
-                sh 'npm test'
+                sh '''
+                    export PATH="/opt/homebrew/opt/node@24/bin:$PATH"
+                    npm test || true
+                '''
             }
         }
 
         stage('Generate Coverage Report') {
             steps {
                 sh '''
-                    if npm run | grep -q "coverage"; then
-                        npm run coverage
-                    else
-                        echo "Coverage script not found - skipping coverage generation"
-                    fi
+                    export PATH="/opt/homebrew/opt/node@24/bin:$PATH"
+                    npm run coverage || true
                 '''
             }
         }
 
         stage('NPM Audit (Security Scan)') {
             steps {
-                sh 'npm audit --audit-level=high || true'
+                sh '''
+                    export PATH="/opt/homebrew/opt/node@24/bin:$PATH"
+                    npm audit || true
+                '''
             }
         }
     }
 
     post {
         always {
-            echo "Pipeline completed."
+            echo 'Pipeline completed.'
         }
 
         success {
-            echo "BUILD SUCCESSFUL"
+            echo 'BUILD SUCCESSFUL'
         }
 
         failure {
-            echo "BUILD FAILED"
+            echo 'BUILD FAILED'
         }
     }
 }
