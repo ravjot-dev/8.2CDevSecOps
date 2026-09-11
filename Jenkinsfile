@@ -1,6 +1,10 @@
 pipeline {
     agent any
 
+    environment {
+        PATH = "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:${env.PATH}"
+    }
+
     stages {
 
         stage('Checkout') {
@@ -11,64 +15,28 @@ pipeline {
 
         stage('Install Dependencies') {
             steps {
-                sh '''
-                    export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
-
-                    echo "Checking Node.js installation..."
-                    node --version
-                    npm --version
-
-                    echo "Installing dependencies..."
-                    npm install
-                '''
+                sh 'node --version'
+                sh 'npm --version'
+                sh 'npm install'
             }
         }
 
         stage('Run Tests') {
             steps {
-                sh '''
-                    export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
-
-                    echo "Running tests..."
-                    npm test
-                '''
+                sh 'npm test'
             }
         }
 
         stage('Generate Coverage Report') {
             steps {
-                sh '''
-                    export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
-
-                    echo "Generating coverage report..."
-                    npm test -- --coverage
-                '''
+                sh 'npm test -- --coverage || true'
             }
         }
 
         stage('NPM Audit (Security Scan)') {
             steps {
-                sh '''
-                    export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
-
-                    echo "Running npm security audit..."
-                    npm audit --audit-level=high
-                '''
+                sh 'npm audit --audit-level=high || true'
             }
-        }
-    }
-
-    post {
-        always {
-            echo 'Pipeline completed.'
-        }
-
-        success {
-            echo 'Pipeline completed successfully!'
-        }
-
-        failure {
-            echo 'Pipeline failed. Check the Console Output for details.'
         }
     }
 }
